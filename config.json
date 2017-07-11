@@ -1,0 +1,9 @@
+{
+  "development": {
+    "mongoUrl": "mongodb://localhost:27017/vend"
+  },
+
+  "test": {
+    "mongoUrl": "mongodb://localhost:27017/vend_test"
+  }
+}
