@@ -8,8 +8,8 @@ describe('basic api endpoint data tests', () => {
 
   beforeEach((done) => {
     Item.insertMany([
-      {name: 'NewItem', price: 1, quantity: 1},
-      {name: 'NewItem2', price: 1.5, quantity: 1},
+      {name: 'NewItem', price: 1, quantity: 1, purchased: 2, paid: 1.5},
+      {name: 'NewItem2', price: 1.5, quantity: 1, paid: 1},
       {name: 'NewItem3', price: 2, quantity: 1}
     ]).then(done());
   });
@@ -18,12 +18,49 @@ describe('basic api endpoint data tests', () => {
     Item.deleteMany({}).then(() => done());
   });
 
-  // it('allows update of item at PATCH /api/vendor/items/:id', (done) => {
+  it('lists income at GET /api/vendor/money', (done) => {
+    request(app)
+      .get('/api/vendor/money')
+      .expect(200)
+      .expect(res => {
+        expect(res.body.total).to.equal(2.5);
+        expect(res.body.items[0].paid).to.equal(1.5);
+      }).end(done);
+  });
+
+  it('lists all purchases at GET /api/vendor/purchases', (done) => {
+    request(app)
+      .get('/api/vendor/purchases')
+      .expect(200)
+      .expect(res => {
+        expect(res.body[0].purchased).to.equal(2);
+      }).end(done);
+  });
+
+  //endpoint broken
+  // it('allows item to be purchased at POST /api/customer/items/:itemId/purchases', (done) => {
+  //   let item = new Item({name: 'NewItem', price: 1, quantity: 1});
   //   request(app)
-  //     .patch('/api/vendor/items/:id')
-  //     .send({price: 5, quantity: 50, description: 'update desc'})
-  //     .expect(202).end(done)
+  //     .post('/api/customer/items/' + item.id + 'purchases')
+  //     .send({paid: 1})
+  //     .expect(res => {
+  //       console.log(res.body);
+  //       expect(res.body.item).to.equal('item');
+  //     })
+  //     .expect(201).end(done);
   // });
+
+  //got help w this from https://stackoverflow.com/questions/30109806/how-to-test-put-method-using-supertest-and-jasmine-node
+  it('allows update of item at PATCH /api/vendor/items/:id', (done) => {
+    let item = new Item({name: 'NewItem', price: 1, quantity: 1});
+    request(app)
+      .patch('/api/vendor/items/' + item._id)
+      .send({price: 5, quantity: 50, description: 'update desc'})
+      .expect(res => {
+        expect(res.body.message).to.equal('Update successful');
+      })
+      .expect(202).end(done);
+  });
 
   it('allows item creation at POST /api/vendor/items', (done) => {
     request(app)
@@ -56,7 +93,7 @@ describe('basic model tests', () => {
     Item.deleteMany({}).then(done());
   });
 
-  after((done) => {
+  afterEach((done) => {
     Item.deleteMany({}).then(done());
   });
 

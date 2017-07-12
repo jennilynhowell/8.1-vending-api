@@ -14,6 +14,7 @@ app.use(bodyParser.json());
 
 
 // GET /api/customer/items - get a list of items
+//TEST PASSING
 app.get('/api/customer/items', (req, res) => {
   Item.find((err, items) =>{
     if (err) {
@@ -25,30 +26,42 @@ app.get('/api/customer/items', (req, res) => {
 });
 
 // POST /api/customer/items/:itemId/purchases - purchase an item
-app.post('/api/customer/items/:id/purchases', (req, res) => {
-  let _id = req.params.id
-    , paid = req.body.paid
-    , change = 0;
-
-    //fix this to have conditionals inside find; still records purchase if paid too low
-  Item.findOneAndUpdate({_id: _id}, {
-    //decrement quantity not working
-    $inc: {quantity: -1},
-    $inc: {purchased: 1},
-    $inc: {paid: paid}
-  }).then(item => {
-    if (paid > item.price) {
-      change = paid - item.price;
-      res.status(201).json({change: change + ' is your change. Thanks!'});
-    } else if (paid < item.price) {
-      res.status(404).json({tryagain: 'Transaction cancelled, please try again'});
-    } else if (paid = item.price) {
-      res.status(201).json({thanks: 'Thanks!'});
-    };
-  });
-});
+//BROKEN!!!!!!
+// app.post('/api/customer/items/:id/purchases', (req, res) => {
+//   let _id = req.params.id
+//     , paid = req.body.paid
+//     , change = 0;
+//
+//   Item.findOne({_id: _id}).then(item => {
+//     if (paid > item.price) {
+//       change = paid - item.price;
+//       item.update(item, [
+//         {$inc: {quantity: -1}},
+//         {$inc: {purchased: 1}},
+//         {$inc: {paid: paid}}
+//       ], (err, result) => {
+//         res.status(201).json(result);
+//       });
+//
+//     } else if (paid < item.price) {
+//       res.status(404).json({tryagain: 'Transaction cancelled, please try again'});
+//
+//     } else if (paid = item.price) {
+//       console.log(item);
+//       item.update(item,
+//         {$inc: {quantity: -1}},
+//         {$inc: {purchased: 1}},
+//         {$inc: {paid: paid}},
+//         (result) => {
+//           res.status(201).json(result);
+//         });
+//
+//     };
+//   });
+// });
 
 // GET /api/vendor/purchases - get a list of all purchases with their item and date/time
+//TEST PASSING
 app.get('/api/vendor/purchases', (req, res) => {
   Item.find({purchased: {$gt: 0}}).then(items => {
     res.status(200).json(items);
@@ -56,14 +69,21 @@ app.get('/api/vendor/purchases', (req, res) => {
 });
 
 // GET /api/vendor/money - get a total amount of money accepted by the machine
+//TEST PASSING
 app.get('/api/vendor/money', (req, res) => {
   Item.find({paid: {$gt: 0}}).then(items => {
-    //items.forEach()...?
-    res.status(200).json(items);
+    let total = 0;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].paid > 0) {
+        total += items[i].paid;
+      }
+    };
+    res.status(200).json({total: total, items: items});
   });
 });
 
 // POST /api/vendor/items - add a new item not previously existing in the machine
+//TEST PASSING
 app.post('/api/vendor/items', (req, res) => {
   let newItem = new Item(req.body).save().then(item => {
     res.status(201).json(item);
@@ -72,7 +92,8 @@ app.post('/api/vendor/items', (req, res) => {
 });
 
 // PUT /api/vendor/items/:itemId - update item quantity, description, and cost
-  //I'm using PATCH here as I do not wish to replace the entire document
+  //!!!! I'm using PATCH here as I do not wish to replace the entire document
+//TEST PASSING
 app.patch('/api/vendor/items/:id', (req, res) => {
   let _id = req.params.id
     , quantity = req.body.quantity
