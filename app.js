@@ -26,45 +26,54 @@ app.get('/api/customer/items', (req, res) => {
 });
 
 // POST /api/customer/items/:itemId/purchases - purchase an item
-//BROKEN!!!!!!
-// app.post('/api/customer/items/:id/purchases', (req, res) => {
-//   let _id = req.params.id
-//     , paid = req.body.paid
-//     , change = 0;
-//
-//   Item.findOne({_id: _id}).then(item => {
-//     if (paid > item.price) {
-//       change = paid - item.price;
-//       item.update(item, [
-//         {$inc: {quantity: -1}},
-//         {$inc: {purchased: 1}},
-//         {$inc: {paid: paid}}
-//       ], (err, result) => {
-//         res.status(201).json(result);
-//       });
-//
-//     } else if (paid < item.price) {
-//       res.status(404).json({tryagain: 'Transaction cancelled, please try again'});
-//
-//     } else if (paid = item.price) {
-//       console.log(item);
-//       item.update(item,
-//         {$inc: {quantity: -1}},
-//         {$inc: {purchased: 1}},
-//         {$inc: {paid: paid}},
-//         (result) => {
-//           res.status(201).json(result);
-//         });
-//
-//     };
-//   });
-// });
+app.post('/api/customer/items/:id/purchases', (req, res) => {
+  let _id = req.params.id
+    , paid = req.body.paid
+    , purchaseDate = Date.now()
+    , change = 0
+    , message = '';
+
+  Item.findById(_id).then(item => {
+    if (paid === item.price && item.quantity > 0){
+      message = 'Thanks!';
+      item.quantity -= 1;
+      item.purchased += 1;
+      item.paid = paid;
+      item.purchaseDate.push(purchaseDate);
+      item.save();
+      return res.status(201).json({message: message, item: item});
+
+    } else if (paid > item.price && item.quantity > 0) {
+      change = paid - item.price;
+      message = 'Change due: ' + change;
+      item.quantity -= 1;
+      item.purchased += 1;
+      item.paid = paid;
+      item.purchaseDate.push(purchaseDate);
+      item.save();
+      return res.status(201).json({message: message, item: item});
+
+    } else if (paid < item.price || item.quantity === 0) {
+      message = 'Sorry, something went wrong!';
+      return res.status(404).json({message: message});
+
+    } else {
+      message = 'Sorry, something went wrong!';
+      return res.status(404).json({message: message});
+    }
+  });
+
+});
+
 
 // GET /api/vendor/purchases - get a list of all purchases with their item and date/time
-//TEST PASSING
 app.get('/api/vendor/purchases', (req, res) => {
   Item.find({purchased: {$gt: 0}}).then(items => {
-    res.status(200).json(items);
+    let list = [];
+    for (let i = 0; i < items.length; i++) {
+      list.push({name: items[i].name, purchasedOn: items[i].purchaseDate});
+    };
+    res.status(200).json({list: list, itemDetail: items});
   });
 });
 

@@ -5,7 +5,8 @@ const itemSchema = new mongoose.Schema({
     price: {type: Number, required: true},
     description: {type: String},
     quantity: {type: Number, required: true},
-    purchased: Number,
+    purchased: {type: Number, required: true, default: 0},
+    purchaseDate: [Date],
     paid: Number
 });
 

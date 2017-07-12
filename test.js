@@ -3,14 +3,13 @@ const request = require('supertest');
 const app = require('./app');
 const Item = require('./models/item');
 
-//check api endpoints
 describe('basic api endpoint data tests', () => {
 
   beforeEach((done) => {
     Item.insertMany([
-      {name: 'NewItem', price: 1, quantity: 1, purchased: 2, paid: 1.5},
-      {name: 'NewItem2', price: 1.5, quantity: 1, paid: 1},
-      {name: 'NewItem3', price: 2, quantity: 1}
+      {name: 'NewItem', price: 1, quantity: 1, purchased: 2, paid: 4, purchased: 4},
+      {name: 'NewItem2', price: 1.5, quantity: 1, paid: 1, purchased: 0},
+      {name: 'NewItem3', price: 2, quantity: 1, purchased: 1}
     ]).then(done());
   });
 
@@ -23,8 +22,7 @@ describe('basic api endpoint data tests', () => {
       .get('/api/vendor/money')
       .expect(200)
       .expect(res => {
-        expect(res.body.total).to.equal(2.5);
-        expect(res.body.items[0].paid).to.equal(1.5);
+        expect(res.body.items[0].paid).to.equal(4);
       }).end(done);
   });
 
@@ -33,33 +31,40 @@ describe('basic api endpoint data tests', () => {
       .get('/api/vendor/purchases')
       .expect(200)
       .expect(res => {
-        expect(res.body[0].purchased).to.equal(2);
+        expect(res.body.itemDetail[0].name).to.equal('NewItem')
+        expect(res.body.itemDetail[0].purchased).to.equal(4);
+        expect(res.body.itemDetail[0].paid).to.equal(4);
+        expect(res.body.itemDetail[1].purchased).to.equal(1);
       }).end(done);
   });
 
-  //endpoint broken
-  // it('allows item to be purchased at POST /api/customer/items/:itemId/purchases', (done) => {
-  //   let item = new Item({name: 'NewItem', price: 1, quantity: 1});
-  //   request(app)
-  //     .post('/api/customer/items/' + item.id + 'purchases')
-  //     .send({paid: 1})
-  //     .expect(res => {
-  //       console.log(res.body);
-  //       expect(res.body.item).to.equal('item');
-  //     })
-  //     .expect(201).end(done);
-  // });
+  it('allows item to be purchased at POST /api/customer/items/:itemId/purchases', (done) => {
+    let item = new Item({name: 'NewItem10', price: 1, quantity: 1, purchased: 0}).save().then((item) => {
+      request(app)
+        .post('/api/customer/items/' + item._id + '/purchases')
+        .send({paid: 2})
+        .expect(res => {
+          expect(res.body.item.name).to.equal('NewItem10');
+          expect(res.body.item.purchased).to.equal(1);
+          expect(res.body.message).to.contain('Change');
+        })
+        .expect(201).end(done);
+    });
+
+  });
 
   //got help w this from https://stackoverflow.com/questions/30109806/how-to-test-put-method-using-supertest-and-jasmine-node
   it('allows update of item at PATCH /api/vendor/items/:id', (done) => {
-    let item = new Item({name: 'NewItem', price: 1, quantity: 1});
-    request(app)
-      .patch('/api/vendor/items/' + item._id)
-      .send({price: 5, quantity: 50, description: 'update desc'})
-      .expect(res => {
-        expect(res.body.message).to.equal('Update successful');
-      })
-      .expect(202).end(done);
+    let item = new Item({name: 'NewItem', price: 1, quantity: 1, purchased: 0}).save().then(item => {
+      request(app)
+        .patch('/api/vendor/items/' + item._id)
+        .send({price: 5, quantity: 50, description: 'update desc'})
+        .expect(res => {
+          expect(res.body.message).to.equal('Update successful');
+        })
+        .expect(202).end(done);
+    });
+
   });
 
   it('allows item creation at POST /api/vendor/items', (done) => {
@@ -98,7 +103,7 @@ describe('basic model tests', () => {
   });
 
   it('test should clean up after itself', (done) => {
-    const _item = new Item({name: 'NewItem', price: 1, quantity: 1}).save().then(item => {
+    const _item = new Item({name: 'NewItem', price: 1, quantity: 1, purchased: 0}).save().then(item => {
       Item.count().then(count => {
         expect(count).to.equal(1);
         done();
@@ -108,7 +113,7 @@ describe('basic model tests', () => {
   });
 
   it('can create item in db and find it w mongoose', (done) => {
-    const _item = new Item({name: 'NewItem', price: 1, quantity: 1})
+    const _item = new Item({name: 'NewItem', price: 1, quantity: 1, purchased: 0})
       .save().then(item => {
         expect(item.name).to.equal('NewItem');
         expect(item.quantity).to.equal(1);
