@@ -22,7 +22,7 @@ describe('basic api endpoint data tests', () => {
       .get('/api/vendor/money')
       .expect(200)
       .expect(res => {
-        expect(res.body.items[0].paid).to.equal(4);
+        expect(res.body.data[0].paid).to.equal(4);
       }).end(done);
   });
 
@@ -31,10 +31,10 @@ describe('basic api endpoint data tests', () => {
       .get('/api/vendor/purchases')
       .expect(200)
       .expect(res => {
-        expect(res.body.itemDetail[0].name).to.equal('NewItem')
-        expect(res.body.itemDetail[0].purchased).to.equal(4);
-        expect(res.body.itemDetail[0].paid).to.equal(4);
-        expect(res.body.itemDetail[1].purchased).to.equal(1);
+        expect(res.body.data[0].name).to.equal('NewItem')
+        expect(res.body.data[0].purchased).to.equal(4);
+        expect(res.body.data[0].paid).to.equal(4);
+        expect(res.body.data[1].purchased).to.equal(1);
       }).end(done);
   });
 
@@ -44,8 +44,8 @@ describe('basic api endpoint data tests', () => {
         .post('/api/customer/items/' + item._id + '/purchases')
         .send({paid: 2})
         .expect(res => {
-          expect(res.body.item.name).to.equal('NewItem10');
-          expect(res.body.item.purchased).to.equal(1);
+          expect(res.body.data.name).to.equal('NewItem10');
+          expect(res.body.data.purchased).to.equal(1);
           expect(res.body.message).to.contain('Change');
         })
         .expect(201).end(done);
@@ -84,10 +84,10 @@ describe('basic api endpoint data tests', () => {
       .get('/api/customer/items')
       .expect(200)
       .expect(res => {
-        expect(res.body[0].name).to.equal('NewItem');
-        expect(res.body[1].name).to.equal('NewItem2');
-        expect(res.body[2].name).to.equal('NewItem3');
-        expect(res.body.length).to.equal(3);
+        expect(res.body.data[0].name).to.equal('NewItem');
+        expect(res.body.data[1].name).to.equal('NewItem2');
+        expect(res.body.data[2].name).to.equal('NewItem3');
+        expect(res.body.data.length).to.equal(3);
       }).end(done);
   });
 });

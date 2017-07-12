@@ -20,12 +20,13 @@ app.get('/api/customer/items', (req, res) => {
     if (err) {
       res.status(500).send(err);
     } else {
-      res.status(200).json(items);
+      res.status(200).json({status: 'Success', data: items});
     };
   });
 });
 
 // POST /api/customer/items/:itemId/purchases - purchase an item
+//TEST PASSING
 app.post('/api/customer/items/:id/purchases', (req, res) => {
   let _id = req.params.id
     , paid = req.body.paid
@@ -41,7 +42,7 @@ app.post('/api/customer/items/:id/purchases', (req, res) => {
       item.paid = paid;
       item.purchaseDate.push(purchaseDate);
       item.save();
-      return res.status(201).json({message: message, item: item});
+      return res.status(201).json({status: 'Success', message: message, data: item});
 
     } else if (paid > item.price && item.quantity > 0) {
       change = paid - item.price;
@@ -51,15 +52,15 @@ app.post('/api/customer/items/:id/purchases', (req, res) => {
       item.paid = paid;
       item.purchaseDate.push(purchaseDate);
       item.save();
-      return res.status(201).json({message: message, item: item});
+      return res.status(201).json({status: 'Success', message: message, data: item});
 
     } else if (paid < item.price || item.quantity === 0) {
       message = 'Sorry, something went wrong!';
-      return res.status(404).json({message: message});
+      return res.status(404).json({status: 'Error', message: message});
 
     } else {
       message = 'Sorry, something went wrong!';
-      return res.status(404).json({message: message});
+      return res.status(404).json({status: 'Error', message: message});
     }
   });
 
@@ -67,13 +68,14 @@ app.post('/api/customer/items/:id/purchases', (req, res) => {
 
 
 // GET /api/vendor/purchases - get a list of all purchases with their item and date/time
+//TEST PASSING
 app.get('/api/vendor/purchases', (req, res) => {
   Item.find({purchased: {$gt: 0}}).then(items => {
     let list = [];
     for (let i = 0; i < items.length; i++) {
       list.push({name: items[i].name, purchasedOn: items[i].purchaseDate});
     };
-    res.status(200).json({list: list, itemDetail: items});
+    res.status(200).json({status: 'Success', list: list, data: items});
   });
 });
 
@@ -87,7 +89,7 @@ app.get('/api/vendor/money', (req, res) => {
         total += items[i].paid;
       }
     };
-    res.status(200).json({total: total, items: items});
+    res.status(200).json({status: 'Success', total: total, data: items});
   });
 });
 
@@ -95,7 +97,7 @@ app.get('/api/vendor/money', (req, res) => {
 //TEST PASSING
 app.post('/api/vendor/items', (req, res) => {
   let newItem = new Item(req.body).save().then(item => {
-    res.status(201).json(item);
+    res.status(201).json({status: 'Success', data: item});
   });
 
 });
